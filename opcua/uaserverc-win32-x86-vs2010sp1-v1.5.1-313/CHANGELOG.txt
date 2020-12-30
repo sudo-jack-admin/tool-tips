@@ -1,0 +1,1349 @@
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.5.1                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+------------------------
+ Changes
+------------------------
+
+Base Library:
+-------------
+
+* Move OpcUa_Variant_Set... functions from uaserver_utilities.h to uabase_utilities.h
+
+* Move OpcUa DataType helper functions from uaserver_addressspace.h to uabase_utilities.h,
+  rename them from UaServer_... to UaBase_...
+
+Client SDK:
+-----------
+
+* Make calling objects passed to callback functions const to prevent modification and
+  deletion of the objects inside the callback
+
+------------------------
+ Bugfixes
+------------------------
+
+* Updates UaStack to latest version 1.3.1
+
+* Replace direct invocations of string and memory functions like strlen and memcmp with
+  UaStack platform layer wrappers like OpcUa_StrLenA and OpcUa_MemCmp
+
+Server SDK:
+-----------
+
+* Fix infinite loop on shutdown if endpoint was not opened due to error
+
+Examples:
+---------
+
+* Set Endpoint PkiConfigName in Server GettingStarted lessons
+
+Documentation:
+--------------
+
+* Add missing screenshot to client lesson 01
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.5.0                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+This SDK release introduces API changes which will lead to compilation errors when used
+with existing providers and applications. Please refer to the 'Migration from V1.4.2 to V1.5'
+chapter of the documentation for an easy step-by-step guide on how to get your existing code
+working with this SDK.
+
+------------------------
+ New Features
+------------------------
+
+* Updates UaStack to latest version 1.3
+
+* Update OpenSSL to V1.0.1m
+
+Base Library:
+-------------
+
+* Base library containing common functions and utilities
+
+* Add UaBase_Settings_ReadNodeId
+
+* Add UaBase_P_SetLastError / UaBase_P_GetLastError
+
+* Add UaBase_Atomic_Get
+
+* Add UaBase_P_IsRestartFlagSet
+
+* Simplify PKI library by reusing non-platform-dependent code
+
+* Add utility functions for handling certificate signing requests
+
+* Add UaBase_RingBuffer_Resize and UaBase_RingBuffer_ReplaceFirst
+
+* Improve performance of UaBase_Vector and UaBase_TurboList
+
+* Add UaBase_Vector_RemoveAt_Ex
+  Instead of moving all elements right to the deleted one to the left, only the last element
+  is moved to the location of the deleted one.
+
+Client SDK:
+-----------
+
+* Client SDK
+
+Server SDK:
+-----------
+
+* GDS push model (Beta)
+  Can be enabled with the CMake option UASERVER_GDS_PUSH
+
+* RootUser / SecurityAdminGroup
+  The two new settings allow specifying a user and group that have access to all security relevant
+  features like auditing and certificate configuration
+
+* Audit events
+  SecureChannel/Session/Certificate audit events are generated automatically and can be received by
+  users of the SecurityAdminGroup
+
+* Authorization for events
+  New member of type UaServer_iNode in UaServer_Event structure allows setting custom access rights
+
+* Improved support for (un)loading providers during runtime:
+    - Update the namespace table when (un)loading a provider
+    - The next release of UaModeler will provide new templates containing the new function
+      UaProvider_XYZ_ClearEventHierarchy
+    - OpcUa_ProxyStub_AddTypes shall not be called if a provider will be (un)loaded dynamically,
+      instead the provider should (de)serialize the structured types manually
+
+* Update DI namespace to latest version
+
+* Update PLCOpen namespace to latest version
+
+* Improved documentation
+
+* MaxEventMonitoredItemsQueueSize allows limiting the queue size for event monitored items
+
+* Certificate validation checks for valid CRLs by default
+  The checks can be disabled by the new DisableErrorCertificate... settings
+
+* Support for security policy 256Sha256
+
+* Service operation limits
+  Limits for the number of operations in one service call can be specified in the server configuration
+
+* Add ServerCapabilities->OperationLimits and child nodes
+
+* Add ServerCapabilities->MaxByteStringLength
+
+* Add UaServer_UserMgt_IsEventReadable and UaServer_UserMgt_GetDefaultPermissions
+
+* Use 8 bit type for gid/uid by default to reduce size of UaServer_iNode to 32 bit
+
+* Reorganize usermanagement flags, add EXECUTABLE, HISTORYINSERT, HISTORYMODIFY, HISTORYDELETE
+  HISTORYREADABLE, ATTRREADABLE and UA_ALL_ENCRYPTION_REQUIRED
+
+* Obey MaxMonitoredItemsQueueSize also for event monitored items
+
+* Add setting MaxSecureChannels
+  Unused secure channels are closed if limit is reached to prevent blocking of the server
+
+Demoserver:
+-----------
+
+* Server can be restarted to reread its configuration
+
+CMake:
+------
+
+* Reorganize CMake files and modules
+
+* Add option BUILD_WITH_UNITS for disabling unit support
+
+* Add option UASERVER_ENABLE_DESCRIPTIONS for disabling the description attribute of namespace 0 nodes
+
+* Add option UABASE_SETTINGS_USE_FILEBACKEND
+
+------------------------
+ Changes
+------------------------
+
+Base Library:
+-------------
+
+* Rename all common utility structures and functions to have UaBase_ as prefix
+
+Server SDK:
+-----------
+
+* Change the defaults for anonymous user and group
+  With the introduction of the RootUser / SecurityAdminGroup (both have the ID 0 by default), the
+  default IDs for the anonymous user and group have been changed to 1
+
+* Disable SecurityPolicyBasic128Rsa15 by default
+  This security policy is deprecated and should only be used if necessary for legacy applications
+
+* Remove Flags parameter of OpenSSL PKI stores
+  Now the revocation status is always checked, OPENSSL_SET_DEFAULT_PATHS is obsolete
+
+* Require an encrypted connection for accessing security relevant information
+    - Only create SessionSecurityDiagnostics if UASERVER_SUPPORT_AUTHORIZATION is enabled
+    - Only allow authenticated users to read their own SessionSecurityDiagnostics
+
+* Change UaServer_ProviderList_DeleteProvider to take NsIdx instead of Index as argument
+
+UaStack:
+--------
+
+* Change return value of OpcUa_String_StrnCmp to match strncmp
+
+* Change OpcUa_VariantMatrix_GetElementCount to return a status code
+
+CMake:
+------
+
+* Rename BUILD_UASTACK_MT to UASTACK_USE_THREADS
+
+* Rename BUILD_UASTACK_USE_SYNC to UASTACK_USE_SYNCHRONIZATION
+
+* Rename BUILD_UASTACK_ENC_OBJ to UASTACK_SUPPORT_ENC_OBJ_EXTENSIONS
+
+* Rename BUILD_WITH_ERROR_LOOKUP with UABASE_ENABLE_ERROR_LOOKUP
+
+------------------------
+ Bugfixes
+------------------------
+
+Base Library:
+-------------
+
+* Reorganize and clean up the atomic headers
+
+* Return error in settings read functions if $ENV{} variable doesn't exist
+
+Server SDK:
+-----------
+
+* Set correct NamespaceIndex in PLCOpen reference types
+
+* Set correct NamespaceIndex in PLCOpen and DI browse names
+
+* Use dwLowDateTime of current time as start value for session and subscription IDs
+
+* Send data change with error BadNodeIdUnknown if node of monitored item was deleted
+
+* Handle event monitored item queue overflows correctly
+
+* Check for validity of the specified security policies
+
+* Take requested namespace index into account in UaServer_RequestNamespaceIndex
+
+* Ensure that the same user token is used in subsequent ActivateSession call if using a different
+  SecureChannel than before
+
+* Set SessionSecurityDiagnosticsArray to correct value
+
+* Fix calculation of rejected cert count, was always zero on non-Windows platforms
+
+* Delay deletion of monitored items until the provider finished handling them
+
+* Wait for outstanding transactions before closing session or shutdown
+
+* Add mutex locks where necessary in subscription / session handling
+
+* Cancel outstanding publish calls when if transport connection was closed
+
+* Return error in UaServer_InitializePKI if PKI type is empty
+
+* Limit MaxNotificationsPerPublish to MaxArrayLength
+
+* Compare SecureChannel certificate with session certificate in CreateSession
+
+UaStack:
+--------
+
+* Replace invocations of malloc/realloc/free with OpcUa_Alloc/ReAlloc/Free where possible
+
+* Use dwLowDateTime of current time as start value for SecureChannel IDs
+
+* Fix crash in TCP connection read event handler
+
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.4.2                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+------------------------
+ New Features
+------------------------
+
+* Updates UaStack to latest version 1.2
+
+* Update OpenSSL to V1.0.1j
+
+SDK:
+----
+
+* Mark deprecated functions and defines using OPCUA_P_DEPRECATED
+
+* Improved documentation
+
+------------------------
+ Bugfixes
+------------------------
+
+SDK:
+----
+
+* Create new monitored item instead of reusing the existing one in ModifyMonitoredItems
+
+* Delay deletion of old item until after SubscribeComplete has been called by provider
+
+* Handle SetMonitoringMode asynchronously
+
+* Handle data logger items asynchronously
+
+* Copy queues when modifying data logger items
+
+* Remove monitored item from provider if MonitoringMode is set to Disabled
+
+* Fix replacing ENV{} placeholders in OpcUa_String variables
+
+* Return error if environment variable requested in ENV{} doesn't exist
+
+* On queue overflow, discard oldest NotificationMessage instead of newest one
+
+* Fix data type of SubscriptionDiagnostics variables
+
+* Fix ApplicationUri check for client certs containing only the URI extension
+
+* Replace all occurences of intptr_t with OpcUa_IntPtr
+
+* Allow closing a session only from the SecureChannel that activated the session
+
+* Don't fail CreateMonitoredItems if not all items can be added; instead add as
+  many items as possible and return BadTooManyMonitoredItems for the rest
+
+* Fix status codes being returned in ActivateSession for user token errors
+
+* Update internal namespace table after loading provider dynamically
+
+* Add error traces in settings functions
+
+* Return correct status codes if unsupported DataEncoding is requested in CreateMonitoredItems
+
+* Create event monitored item even if some of the event fields are unknown
+
+* Use PublishInterval if SamplingInterval is < 0 instead of <= -1
+
+* Fix crash when passing empty certificate in CreateSession on encrypted SecureChannel
+
+* Fix crash on Translate with NULL string StartingNodeId in known namespace
+
+* Ensure correct order of indices in IndexRange when creating monitored items
+
+* Remove unrequested timestamps when filling publish response instead of in UaServer_NewItemValue
+
+* Ensure valid AttributeId when creating monitored items
+
+* Check for valid AttributeId in WriteInternal
+
+* Don't use malloc in SDK code, use OpcUa_Alloc instead
+
+* Fix shutdown time calculation on TickCount overflow
+
+Providers:
+----------
+
+* Speed up deleting monitored items by not iterating over list of items
+
+Data Logger:
+------------
+
+* Fix parsing string NodeIds containing spaces
+
+* Replace gmtime() with thread safe replacement functions
+
+Build System:
+-------------
+
+* Fix building with OpenSSL on vxWorks
+
+* Fix building on WindowsCE
+
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.4.1                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+------------------------
+ New Features
+------------------------
+
+* Update OpenSSL to V1.0.1g
+
+SDK:
+----
+
+* Filter returned Endpoints by EndpointURL if given in GetEndpoints
+
+------------------------
+ Bugfixes
+------------------------
+
+SDK:
+----
+
+* Fix unloading of providers if UaServer_Providers_Initialize fails
+
+* Fix possible deadlock in asynchronous TranslateBrowsePath handling
+
+* Allow configuring experimental http:// endpoints
+
+* Fix diagnostic MonitoredItemCount and CurrentPublishRequestsInQueue
+
+* Fix data type of subscription diagnostics variables
+
+* Use correct namespace index in BrowseName and NodeIds of diagnostic variables
+
+* Ignore first parameter of UaServer_RequestNamespaceIndex, can be set to 0 now
+
+* Fix possible crash when removing nodes after provider has been removed
+
+* Make OpcUa_BaseNode_RemoveReferenceToNode behave analogous to AddReferenceToNode
+
+* Don't replace hostname in returned URLs (FindServers, GetEndpoints, CreateSession)
+
+* Fix MaxSubscriptionsPerSession limitation, was off by one
+
+* Fix missing events when being sent from multiple threads in parallel
+
+* Fix possible crash when emitting events from multiple threads in parallel
+
+Examples:
+---------
+
+* Prevent double clear of UaStack in error handling before shutdown
+
+* Fix initial Historizing value of demo history variables
+
+Demoserver:
+-----------
+
+* Return correct write result for custom handled variables
+
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.4.0                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+This SDK release introduces API changes which will lead to compilation errors when used
+with existing providers and applications. Please refer to the 'Migration from V1.3.3 to V1.4'
+chapter of the documentation for an easy step-by-step guide on how to get your existing code
+working with this SDK.
+
+------------------------
+ New Features
+------------------------
+
+* New oversampling example
+
+* Update OpenSSL to V1.0.1f
+
+SDK:
+----
+
+* Support for deferred provider loading after server startup. This adds the new
+  function UaServer_ProviderList_ReserveProviders.
+
+* Update DI namespace to latest version
+
+* Remove ProviderCallbackInterface, building the SDK as shared library is now possible:
+    - Remove the ProviderCBInterface
+    - All SDK functions to be used by providers or the application are exported with UASERVER_API macro
+    - Add define LIBRARY_PATH as base path for loading shared libraries with UaServer_P_LoadLibrary
+
+* New TranslateBrowsePathsToNodeIds interface:
+    - Make asynchronous handling of Translate possible
+    - Returning more than one target nodes possible
+
+* Add functions strlcat and strlcpy
+
+* Add function UaServer_Session_GetSecureChannelId()
+
+* Add subscription diagnostic objects
+
+* Allow creating multiple endpoints
+    - Each endpoint can have its own PKI provider
+    - Discovery uses certificate of first endpoint for registration at LDS
+    - Automatically set the SecurityLevel of endpoints
+
+* Rewrite server config structure:
+    - Split uaserver_config.h into compile time and dynamic settings
+    - Dynamic settings in uaserver_config.h are default values, can be overwritten using the server config structure
+    - New defines:
+        UASERVER_MAX_PUBLISHINGRATE
+            The maximum supported publishing interval.
+        UASERVER_ENABLE_DESCRIPTIONS
+            Enables description strings in namespace 0. Disable to save space by omitting the description strings.
+        UASERVER_SUBSCRIPTION_MINLIFETIMEINTERVAL
+            The minimum supported Lifetime for subscriptions.
+        UASERVER_SUBSCRIPTION_MAXLIFETIMEINTERVAL
+            The maximum supported Lifetime for subscriptions.
+        UASERVER_USERISSUERCERTS_DIR
+            The folder containing issuer certificates for X509 authentication tokens.
+        UASERVER_USERISSUERCRL_DIR
+            The folder containing issuer revocation lists for X509 authentication tokens.
+        UASERVER_REJECTED_CERTIFICATES_DIR
+            The folder for storing rejected client certificates.
+
+* Evaluate MaxNotificationsPerPublish
+
+* Evaluate subscription priority
+
+* Allow writing ByteString to Byte[] as needed by the UA specification
+
+* Add PKI utility functions (UaServer_PkiCertificate_HasExtension/GetExtension) for getting certificate extensions
+
+* Add status code to string conversion function UaServer_StatusCode_ToString
+
+* Add UaServer_Settings utility functions and structures for parsing the server configuration:
+    - Configuration can be parsed automatically using UaServer_Settings_GetConfigurationFromSettings
+    - The back-end of UaServer_Settings can be changed at will, no need for accessing a file
+
+* Add define UASERVER_PATH_MAX
+
+* Add UaServer_TimedDoCom to set the maximum wait time manually
+
+* Check if the server certificate matches the private key
+
+* Add UaServer_Events_UnregisterEventNotifier and UaServer_Events_UnregisterEventSource
+
+* Allow passing lists of DNS names and IP addresses when creating a certificate
+
+* Storing all certificates separately if receiving a certificate chain from a client
+
+* Add return code defines for being used by UaServer_Mkdir and UaServer_MkPath
+
+* Add support for Opaque and GUID NodeIds
+
+Demoserver:
+-----------
+
+* Sources of demoserver included in SDK
+
+* Add static matrix values
+
+* Using new settings interface
+
+* New default port 48020 is now used instead of 4842
+
+UaStack:
+--------
+
+* Update UaStack to version 1.2
+
+* Experimental HTTPS support
+
+------------------------
+ Changes
+------------------------
+
+Demoserver:
+-----------
+
+* Command line arguments:
+    - remove [-p <portnumber>] as now multiple endpoints are allowed
+    - remove [-x] as datalogger can be enabled/disabled via configuration file
+    - add [-c <config file>] (default: settings.ini/settings.conf)
+    - add [-d] for increasing the trace level
+
+SDK:
+----
+
+* UAPROVIDER_STATIC has been replaced by BUILD_SHARED_LIBS
+
+* New PKI defines OPCUA_PKI_TYPE_NONE / OPCUA_P_PKI_TYPE_OPENSSL have to be used
+
+* Rewrite UaServer_Initialize to only take a_pUaServer as argument
+
+* Security- and UserTokenPolicies are not created with default values any more
+
+* Changes in uaserver_config.h:
+    - Renamed defines:
+        UASERVER_SUBSCRIPTION_MAXKEEPALIVECOUNT -> UASERVER_SUBSCRIPTION_MAXKEEPALIVEINTERVAL
+            The maximum supported KeepAliveInterval for subscriptions.
+    - Deleted defines:
+        UASERVER_SUPPORT_64BIT
+            The SDK always supports 64 bit.
+        NUM_SAMPLINGRATES
+            This has to be set by each provider individually.
+        UASERVER_MIN_SAMPLINGRATE
+            This has to be set by each provider individually.
+        UAPROVIDER_STATIC
+            Has been replaced by BUILD_SHARED_LIBS
+
+* UaServer_Session_GetContinuationPoints returns 'const UaServer_TurboList*' now
+    For providers that need to create their own ContinuationPoints, the functions
+    UaServer_ContinuationPointInfo_AddToList and UaServer_ContinuationPointInfo_RemoveFromList
+    must be used.
+
+------------------------
+ Bugfixes
+------------------------
+
+SDK:
+----
+
+* Fix Translate over provider boundaries
+
+* Make asynchronous handling of Translate possible
+
+* Make asynchronous handling of BrowseNext possible
+
+* Always storing client certificates in rejected folder on error (before: only on OpcUa_BadCertificateInvalid)
+
+* All dynamic variables are simulated now
+
+* Update monitored item queue handling according to the UA specification 1.02
+
+* Fix error code returned for invalid deadband
+
+* Fix error code for IndexRange on inapplicable attributes
+
+* Fix calculating the CurrentKeepAliveCount (was off by one)
+
+* Additional checks for unsupported parameters in UaServer_Read_Internal
+
+* Check client ApplicationURI in CreateSession
+
+* Set subscription state to late if it was late and not all notifications could be sent in publish
+
+* Delay deletion of monitored items until after last SubscribeComplete callback
+
+* Fix de-serializing of password length on big endian systems
+
+* Fix locking of session and subscription if built with synchronization support
+
+* Fix deletion order of subscriptions when closing a session
+
+* Fix atomic functions to really be atomic
+
+* Keep the monitored item queue on ModifyMonitoredItems
+
+* Allow ActivateSession with empty UserIdentityToken
+
+* Remove UaServer_P_WaitForKeypress and UaServer_P_GetKeypress
+
+* Fix storing rejected certificate if rejected path does not end with '/'
+
+* Use the passed URL for discovery registration instead of the one received in GetEndpoints
+
+* Non-activated sessions are closed after 10 seconds if MaxSessionCount is reached to avoid being spammed by clients
+
+* Fix wrong reference of Integer to UInteger in namespace 0
+
+* Fix status code for read on non-applicable attributes
+
+* Check access rights of nodes when browsing, hiding nodes correctly if not browsable/readable
+
+* User names in internal authentication module may now contain spaces (enclose in " in passwd/group files)
+
+* Allow asynchronous handling of BrowseNext calls
+
+* Always create a ServerNonce if PKI is available
+
+Demoserver:
+-----------
+
+* Remove needless CRL generation
+
+CMake:
+------
+
+* Reorganize include directories, only CMAKE_MODULE_PATH has to be set
+
+* Only add needed source files (e.g. provider_call.c only if call service is enabled)
+
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.3.3                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+
+------------------------
+ New Features
+------------------------
+
+* Add function UaServer_UserMgt_SetHistoryUserContext for setting the user context
+  to be used for historizing variables. This is only enabled if HAVE_DATA_LOGGER
+  is defined.
+
+------------------------
+ Changes
+------------------------
+
+* Try registration at discovery server in increasing intervals if errors occur
+
+* Add IndexRange handling for missing data types
+
+------------------------
+ Bugfixes
+------------------------
+
+SDK:
+----
+
+* Fix filename generation when saving rejected client certificates
+
+* Fix comparison in UaServer_IsSubReference
+
+* Return correct error code in UaServer_ParseIndexRange if string is empty
+
+* Fix memleak in BeginActivateSession
+
+* Fix subscription KeepAlive logic for subscriptions in late state
+
+* Fix check for data changes of triggered items
+
+* Fix handling of IndexRange with two ranges for String and ByteString values
+
+* Fix crash if adding history monitored item fails
+
+* Fix possible crash when adding encodeable types to the UaStack during runtime
+
+UaStack:
+--------
+
+* Fix release of invalid heap address during certificate validation.
+  By passing a buffer containing additional data behind the encoded certificate,
+  free() will be called with an potentially invalid address. This allows to
+  remotely crash a server. There is risk of remote code injection.
+
+* Fix crash in secure listener upon receive of Abort message type.
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.3.2                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+
+------------------------
+ Bugfixes
+------------------------
+
+* Fix data change filter if Deadband and Status/Value/Timestamp is configured
+
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.3.1                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+
+------------------------
+ Changes
+------------------------
+
+* Aborting startup if initialize provider fails
+
+* Removing references when deleting an OpcUa_BaseNode
+
+------------------------
+ Bugfixes
+------------------------
+
+* Fix handling of TimeoutHint==0 in PublishRequests
+
+* Fix build with OPCUA_USE_SYNCHRONISATION enabled
+
+* Fix crash in GetEndpoints if EndpointURL is empty
+
+* Fix check for forward/inverse references in TranslateBrowsePathsToNodeIds
+
+* Fix namespace check in TranslateBrowsePathsToNodeIds
+
+* Check for correct data type on write to MinimumSamplingInterval
+
+* Check reference type before deleting inverse reference
+
+* Remove needless trace messages
+
+* Fix OpcUa_BaseNode_AddReferenceToNode behaviour if no inverse reference is created
+
+* Fix endianness check in UaServer_P_TimeTFromDateTime
+
+* Fix UserExecutable attribute when built with authorization
+
+* DemoProvider:
+
+- Review address space
+
+- Set reasonable values for EURange and DiscreteTypes
+
+- Using AlarmType instead of AcknowledgeableConditionType, fix state strings
+
+- Set correct event type of SampleEvent
+
+- Check method access rights when built with authorization
+
+------------------------
+ New Features
+------------------------
+
+* Add function UaServer_Shutdown for automatic shutdown after defined interval
+
+* Replace hostname in FindServers like in GetEndpoints
+
+* Add GetNodeById function to ProviderCBInterface
+
+* Add function UaServer_TurboList_GetNext
+
+* Add function UaServer_Session_GetContinuationPoints
+
+* Register server again at LDS with isOnline == false on shutdown
+
+* Update UA namespace to include Complex and DoubleComplexNumberType
+
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.3.0                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+
+------------------------
+ Changes
+------------------------
+
+* BREAKING CHANGE: Changed the type of the last value stored at data monitored items to use OpcUa_DataValue to
+  allow storing timestamps and status code together with the last value. Use the new UaServer_NewItemValue
+  function to let the SDK detect data changes.
+
+* IMPORTANT: Using new stack functions for copying UA structures. The XYZ_Clone methods (e.g. OpcUa_NodeId_Clone)
+  are deprecated, use the new XYZ_CopyTo methods instead
+
+* Removed unused history helper functions (HistoryReadEventInternal, HistoryReadRawModifiedInternal,
+  HistoryReadProcessedInternal, ReadAtTimeInternal, HistoryUpdateInternal)
+
+* Updated UA address space to UA Specification 1.02
+
+* UaServer_Events_GetEventField can now be used to retrieve event field values using their local index
+
+* Change timeout checks of session and subscription to use monotonic GetTickCount, avoiding system time
+  change issues
+
+------------------------
+ Bugfixes
+------------------------
+
+* IMPORTANT: Fixed the creation of the extensions of certificates. It is recommended to recreate
+  existing application instance certificates in order to contain correct extensions.
+  Without this extension multiple certificates with the same identity might not work.
+
+* Checking the client signature in ActivateSession
+
+* Creating a new ServerNonce with each ActivateSession call
+
+* Fixed 64 bit compilation warnings
+
+* Fixed Compliance Test Tool errors
+
+* Aborting all outstanding publish requests if the last subscription of a session is deleted
+
+* Fixed connection loss after call to unsupported service
+
+* Added check for minimum length of the client nonce
+
+* Deleting session when being used without activation
+
+* Fixed status code returned on close session if session was not activated
+
+* Returning correct user access rights if UASERVER_SUPPORT_AUTHORIZATION is enabled
+
+* Startup flag status is correctly copied in ModifyMonitoredItems
+
+* Fixed deadband filter behaviour after call to ModifyMonitoredItems
+
+* Fixed index range handling for String and ByteString values
+
+* Fixed crash if client certificate is empty
+
+* Returning correct status code for non-applicable IndexRange
+
+* Using GetTickCount as starting value for SubscriptionIds
+
+* Using ApplicationUri in server array node
+
+* Fixed TranslateBrowsePaths for PLCOpen and DI nodes
+
+* Implemented special handling for access to the server's CurrentTime node to be as accurate as possible
+
+* Windows:
+
+- Removes wrong endianness check in UaServer_P_TimeTFromDateTime
+
+------------------------
+ New Features
+------------------------
+
+* IMPORTANT: UaServer_SetUserAuthenticationType is deprecated, use UaServer_SetUserAuthenticationTypeEx instead
+            for using X509 authentication tokens
+
+* New helper function UaServer_NewItemValue that can be used instead of UaServer_DataChanged that allows to move
+  data change detection to the SDK.
+
+* New DataLogger module for logging and reading history data
+
+* Added GettingStarted lessons explaining the usage of the SDK in detail
+
+* Publishing and sampling timers now use one timer per interval, so independent intervals can now be used
+
+* Added support for Units
+
+* Added support for DeadbandPercent
+
+* X509 authentication possible using the internal authentication module, added helper function UaServer_VerifySignature
+
+* New Demo provider with a more complex address space, providing all nodes needed for Compliance Testing
+
+* New UA method GetMonitoredItems allows retrieving of all MonitoredItems in a subscription
+
+* Added define UASERVER_MAX_PUBLISH_PER_SESSION for limiting the number of outstanding publish requests
+
+* Added define UASERVER_MAX_SESSIONS for limiting the number of sessions
+
+* Added define UASERVER_MAX_REJECTED_CERTIFICATES to limit the number of stored rejected certificates
+
+* Added define UASERVER_SUPPORT_DISCOVERY (CMake option BUILD_WITH_DISCOVERY) for disabling registration at the local discovery server
+
+* Added functions UaServer_P_InitShutdownFlag, UaServer_P_IsShutdownFlagSet and UaServer_P_ClearShutdownFlag
+  for platform independent detection of shutdown keystrokes
+
+* Added functions UaServer_Session_IsEncrypted and UaServer_Session_IsSigned
+
+* Added function UaServer_Session_SetCurrentClientUserId to set the current user's name in the session diagnostic object
+
+* Providers can now be deleted during runtime
+
+* Setting client's SessionName as DisplayName and BrowseName of session node
+
+* Added version info defines to uaserver_config.h
+
+* Added SessionDiagnostics and SessionSecurityDiagnostics nodes
+
+* Replacing the hostname in the GetEndpoints response if EndpointUrl is set in request
+
+* Added new FindUASDK.cmake CMake module, making the CMakeLists.txt easier to read
+
+* CMake generates a uaserver_cmake_config.h header which can be included in other projects linking against the SDK.
+  This way the SDK specific preprocessor defines don't have to be specified in other projects.
+  Simply define UASERVER_HAVE_CONFIG in the other project to use the generated header.
+
+* Optimized UA, PLCOpen and DI address space tables
+
+* Optimized grow strategy in UaServer_Vector (used for storing references)
+
+* NEW convenience functions for creating NodeIds, LocalizedTexts, and QualifiedNames. This is useful for creating address
+  spaces in less lines:
+  - UaServer_SetDefaultNamespace
+  - UaServer_GetDefaultNamespace
+  - UaServer_CreateStringNodeId
+  - UaServer_CreateStringNodeIdEx
+  - UaServer_CreateNumericNodeId
+  - UaServer_CreateNumericNodeIdEx
+  - UaServer_CreateLocalizedText
+  - UaServer_CreateQualifiedName
+  See API reference documentation for more information.
+
+* NEW convenience functions for setting variant values.
+  - OpcUa_Variant_SetBoolean
+  - OpcUa_Variant_SetSByte
+  - OpcUa_Variant_SetByte
+  - ...
+  See API reference documentation for more information.
+
+* NEW UaModeler version will be release shortly after the SDK release
+  The new UaModeler version supports generation of complete provider code based on the designed information model.
+  This supports creation of folders, variables, object types and instances, complex data types and enumerations,
+  event types including the event hierarchy and last but not least icon properties.
+  The complete new Demo provider of the UaDemoServer was generated using this UaModeler.
+
+* Demo server:
+
+- Supporting commandline options (start with '-h' as parameter for details)
+
+- Using the fully qualified hostname as endpoint URL
+
+- Added sample for dynamic creation of nodes
+
+* Windows:
+
+- Added CMake option to build against the static C runtime
+
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.2.1                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+
+------------------------
+ Changes
+------------------------
+
+* IMPORTANT: The UserData stored in BaseNodes and their subtypes will not any more be freed on shutdown.
+             It is now in the responsibility of the application to free the memory referenced by the UserData.
+
+* Removed usage of OpcUa_DateTime_ToInt64 after it was removed in uastack
+
+* Removed UASTACK_SUPPORT_PKI, replaced UASTACK_WITH_SECURITY with UASTACK_WITH_OPENSSL after that was unified in uastack
+
+* Made authentication and authorization settings configurable in CMakeLists.txt
+
+------------------------
+ Bugfixes
+------------------------
+
+* Alarms & Events:
+
+ - Storing events of type ConditionType in UaServer_Events_CreateEvent instead of UaServer_Events_FireEvent
+
+ - Fixed removing of Conditions from internal management list
+
+ - Fixed crash in UaServer_ModifyMonitoredItems for event items
+
+* SampleProvider:
+
+ - Fixed write on invalid memory for dynamic GUID
+
+ - Removed usage of hard coded NodeId identifiers
+
+* ServerProvider:
+
+ - Setting correct requested address space size
+
+ - Added error checks in server provider address space creation
+
+ - Removed creation of duplicate references in server address space
+
+* Discovery:
+
+ - Fixed crash in discovery registration if no response was received
+
+ - Removed usage of hard coded Endpoint index in discovery registration
+
+ - Fixed check for NULL ResponseType in discovery registration
+
+* Linux:
+
+ - Implements missing methods UaServer_P_DateTime_ToMilliseconds and UaServer_P_DateTime_Diff
+
+ - Added SIGPIPE handler in demoserver application
+
+* Fixed possible crashes for array lengths of -1
+
+* Initializing providers correctly to prevent crashes after errors in startup phase
+
+* Regularly checking sessions for timeout
+
+* Creating default security policies of endpoint depending on stack settings
+
+* Added missing unlock of session mutex
+
+* Fixed possible hijacking of sessions by setting first SessionId with GetTickCount
+
+* Added check for creating invalid SessionId
+
+* Changed index parameter of UaServer_HashTable methods to unsigned int to prevent invalid array index access
+
+* Increased UASERVER_MAX_PROVIDERNODES for generated server address space
+
+* Returning service fault if PublishRequest times out
+
+* Using stack datatypes in utility methods
+
+* Added check for system time changes to prevent erroneous Session timeouts
+
+* Removed overwriting of PKIType setting in PkiConfig
+
+* Fixes error checks in node creation methods
+
+* Not adding security policies if PkiType == NO_PKI
+
+* Clearing server struct in demoserver only if it has been initialized
+
+* Building the SDK libraries without security (without OpenSSL) possible
+
+* Using Mutexes and Semaphores only if OPCUA_USE_SYNCHRONISATION is set
+
+* Not allowing to write value of different ArrayType
+
+------------------------
+ New Features
+------------------------
+
+* Added method RemoveNode to Provider interface
+
+* Alarms & Events:
+
+ - Added method UaServer_Events_GetConditionByNodeId
+
+ - Extended Alarms & Events example and added tutorial 3
+
+* Made the server callback interface available for the application via UaServer_SetCallback_SessionCreated/SessionActivated/SessionClosed
+
+* Added getter methods for ClientName and LastClientContact of a Session
+
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.2.0                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+
+------------------------
+ Changes
+------------------------
+
+* IMPORTANT: Preprocessor defines for the server application PKI configuration have been moved from uaserver_config.h to uaserver.c.
+             These values now have to be set in the UaServer_Configuration struct that can be retrieved by UaServer_GetConfiguration().
+             This allows to change BuildInfo and PKI configuration of the UA application without recompiling the SDK.
+
+* Windows: The PKI directory used by the sample application is now "All Users\Application Data\UnifiedAutomation\<ProductVersion>\PKI" (or equivalent)
+
+* Moved DI/PLCOpen model files to sub-folders
+
+* Split HistoryRead in HistoryReadEvent / HistoryReadRawModified / HistoryReadProcessed / HistoryReadAtTime
+
+* New method UaServer_DoCom() is to be called in a loop instead of OpcUa_SocketManager_Loop() in the application
+
+* Renamed define UASERVER_MAX_NAMESPACEINDICIES to UASERVER_MAX_NAMESPACEINDICES
+
+------------------------
+ Bugfixes
+------------------------
+
+* Fixed returned StatusCode for UaServer_Write_Internal()
+
+* Fixed creation of DataChange if DataChangeTrigger is StatusCode only
+
+* Unified include policy of header files and file structure
+
+* Changed processing order of LinksToAdd/LinksToDelete in UaServer_SetTriggering to be compliant
+
+* Fixed memleak in UaProvider_Server_InitServerStatus
+
+* Removed usage of OpcUa_BaseNode's UserData in SDK
+
+* Fixed potential crashes in OpcUa_BaseNode_Set... methods that use strings
+
+* Added handling of unhandled data types to OpcUa_Variant_Clone
+
+* Added handling of unhandled data types to OpcUa_Variant_ScalarCompare/ArrayCompare/MatrixCompare/CompareDeadbandAbsolute
+
+* Setting PolicyId of configured UserTokenPolicies
+
+* Fixed application URI in linux sample server
+
+------------------------
+ New Features
+------------------------
+
+* Authentication:
+
+ - Added Internal / Win32 / PAM / SASL authentication modules
+ - Only accepting connections if used UserIdentityToken is configured and valid
+ - If UserIdentityToken is set to Username/Password, an authentication module must be enabled
+ - Added support for encrypted passwords in UserIdentityToken
+ - Added authorization support to Server- and Sampleprovider
+
+* Authorization:
+
+ - Added UaServer_iNode structure to OpcUa_BaseNode for authorization handling
+ - Added user management methods to provider interface
+ - Added UaServer_UserCtx as session's UserIdentityData
+ - Using UaServer_iNode instead of UserWriteMask/UserAccessLevel for authorization
+ - Added sample nodes with different access rights in sample provider
+ - Added sample passwd and group files
+ 
+* Alarms & Events:
+
+ - Added support for event monitored items
+ - Added methods for firing events
+ - Added all event types from UA address space
+ - Creating custom event types is possible
+ - Added sample event type to sample provider
+ - Added sample EventNotifier and EventSource to sample provider
+ - Added convenient methods to set event fields of BaseEventType
+ - SetTriggering supports event monitored items
+ - WhereClause supporting all operators (except for Cast)
+ - Handling ConditionRefresh() method in SDK
+
+* OpcUa_BaseNode members are not visible any more, removed UASERVER_BASENODE_HIDEMEMBERS define
+
+* UaServer members are not visible any more, configuration is accessible with UaServer_GetConfiguration()
+
+* Added server side limit for ReferencesPerNode for Browse/BrowseNext responses
+
+* Added OpcUa_BaseNode_RemoveReferenceToNode and OpcUa_BaseNode_RemoveReferenceToNodeId
+
+* Added periodic registration at discovery server
+
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.1.1                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+
+------------------------
+ Bugfixes
+------------------------
+
+* Fixed bug in UaServer_TurboList freelist handling
+
+* Fixed bug in UaServer_HashTable_RemoveAt
+
+* Fixed bug in removing UA nodes dynamically
+
+* Fixed bug in cloning opaque NodeIds in OpcUa_NodeId_Clone
+
+------------------------
+ New Features
+------------------------
+
+* Added 5 static and 5 dynamic UInt32 variables to demo address space
+
+* Added SessionCancel implementation
+
+* Added Triggering of subscriptions
+
+* Completed UA Data Access information model support:
+
+ - Added BrowseContinuationPoints and MinSupportedSampleRate nodes
+ - Added UaSession nodes. Each new session creates a new node in the address space.
+
+* Added monitoring support for all attributes
+
+* Added datachange filter (absolute deadband)
+
+* Added AvailableSequenceNumbers to publish response
+
+* Changed ModifyMonitoredItems to work asynchronously
+
+* Improved timer precision by time measurements instead of just counting number of timeouts
+
+* Improved item queue handling of datachange notifications
+
+* Added IndexRange support for datatypes String and ByteString
+
+* Added missing results for SubscriptionAcknowledgements in Publish requests
+
+* Added standard conformant ApplicationURI
+
+* Added Browse Checks
+
+ - Check ReferenceTypeId
+ - Check BrowseDirection
+ - Check if ReferenceNodeId is an empty String
+
+* Improved error handling in BrowseNext
+
+* TranslateBrowsePathToNodeId: return OpcUa_BadNodeIdInvalid if StartingNode not found
+
+* Session Management:
+
+ - check if session is used un activated
+ - check the SecureChannelId
+ - verify Timestamp and TimeoutHint
+
+* Utilities:
+
+ - Added new function UaServer_NamespaceIndex_GetByUri()
+
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.1.0                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+
+------------------------
+ New Features
+------------------------
+
+* BrowseNext Service
+ 
+* Continuationpoints
+
+* Republish Service
+ 
+* ModifySubscription Service
+
+* Support for PLCopen and DI Type System
+
+* Certificate and CRL generation at server startup (if not existent)
+
+* Certificates of unknown clients are stored in rejected folder 
+ 
+* Improved internal node management
+ 
+* Support for multiple namespaces in one provider
+ 
+* AddressSpace creation with auto generated sources (UaModeler) 
+
+
+********************************************************************************
+********************************************************************************
+**                                                                            **
+**              Version 1.0.0                                                 **
+**                                                                            **
+********************************************************************************
+********************************************************************************
+
+Initial release
